@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SmartShelf</title>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#16202b;--mut:#5d6b79;--line:#dbe1e7;--acc:#17406b;--on:#fff;--wa:#1c7a4a;--dng:#a8321f;--rule:#e9eef3;--gain:#14693f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10161d;--card:#18212b;--ink:#eaf0f5;--mut:#9aa8b6;--line:#2b3744;--acc:#7fb4ea;--on:#0b1722;--wa:#58c98a;--dng:#f08a76;--rule:#212c37;--gain:#6fd49b;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10161d;--card:#18212b;--ink:#eaf0f5;--mut:#9aa8b6;--line:#2b3744;--acc:#7fb4ea;--on:#0b1722;--wa:#58c98a;--dng:#f08a76;--rule:#212c37;--gain:#6fd49b;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.app{max-width:597px;margin:0;padding:12px 22px 40px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.logo{font-weight:700;font-size:20px}
+.lang{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.lang button{border:0;background:transparent;color:var(--mut);padding:8px 12px;font:inherit;font-size:14px;min-height:40px}
+.lang button.on{background:var(--acc);color:var(--on);font-weight:700}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:14px}
+.tabs button{border:0;background:transparent;color:var(--mut);font:inherit;font-size:15px;min-height:46px;border-radius:9px;cursor:pointer}
+.tabs button.on{background:var(--acc);color:var(--on);font-weight:700}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.box small{display:block;color:var(--mut);font-size:14px}
+.box b{display:block;font-size:22px;line-height:1.2;margin-top:2px}
+.box.big b{font-size:30px}
+.gain{color:var(--gain)}.loss{color:var(--dng)}
+.btn{min-height:58px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-weight:700;padding:8px 12px;cursor:pointer}
+.btn.pri{background:var(--acc);color:var(--on);border-color:var(--acc)}
+.btn.sm{min-height:42px;font-size:15px;border-radius:10px}
+.form .btn:not(.pri):not(.on){background:var(--bg)}
+.btn.on{background:var(--acc);color:var(--on);border-color:var(--acc)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.prod{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit;color:var(--ink);cursor:pointer;min-height:84px}
+.prod.sel{border:2px solid var(--acc)}
+.prod b{display:block;font-size:17px}
+.prod span{display:block;color:var(--mut);font-size:14px}
+.prod .low{color:var(--dng)}
+.form{background:var(--card);border:1px solid var(--acc);border-radius:12px;padding:16px;margin-bottom:12px}
+.form h2{margin:0;font-size:19px}
+.form label{display:block;font-size:15px;color:var(--mut);margin:12px 0 7px}
+input{width:100%;min-height:56px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);font:inherit;padding:8px 14px}
+input.amt{font-size:24px;font-weight:700;text-align:center}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qrow{display:grid;grid-template-columns:56px 1fr 56px;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.chip{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:20px;padding:8px 14px;font:inherit;font-size:15px;min-height:40px;cursor:pointer}
+.line{margin:12px 0 4px;font-weight:700}
+.err{color:var(--dng);font-size:15px;min-height:22px;margin-top:8px}
+.frow{display:grid;grid-template-columns:1fr 2fr;gap:11px;margin-top:9px}
+.rows{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.row{padding:12px 14px;border-bottom:1px solid var(--rule)}
+.row:last-child{border-bottom:0}
+.rtop{display:flex;align-items:center;gap:10px}
+.rname{flex:1;min-width:0;background:none;border:0;text-align:left;font:inherit;color:var(--ink);padding:4px 0;cursor:pointer}
+.rname b{display:block;font-size:18px}
+.rname span{display:block;color:var(--mut);font-size:14px}
+.rval{font-weight:700;font-size:18px;white-space:nowrap;text-align:right}
+.rval small{display:block;font-weight:400;color:var(--mut);font-size:13px}
+.rem{min-height:44px;border:0;border-radius:10px;background:var(--wa);color:#fff;font:inherit;font-weight:700;padding:8px 14px;cursor:pointer}
+:root[data-theme="dark"] .rem{color:#08130d}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .rem{color:#08130d}}
+.panel{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px;font-size:15px}
+.panel .hl{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:2px 0}
+.panel .m{color:var(--mut)}
+.link{border:0;background:none;color:var(--dng);font:inherit;font-size:14px;padding:8px;min-height:40px;cursor:pointer}
+.empty{padding:22px 16px;text-align:center;color:var(--mut)}
+h3{font-size:15px;color:var(--mut);font-weight:400;margin:14px 4px 6px}
+.toast{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom,0px));margin-top:14px;background:var(--ink);color:var(--bg);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.toast button{border:0;background:none;color:inherit;font:inherit;font-weight:700;text-decoration:underline;min-height:40px;padding:0 6px;cursor:pointer}
+.note{color:var(--mut);font-size:13px;text-align:center;margin-top:18px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top"><div class="logo">SmartShelf</div><div class="lang" role="group" aria-label="Language"><button id="l-rw">RW</button><button id="l-en">EN</button></div></div>
+  <div class="tabs" id="tabs"></div>
+  <div id="view"></div>
+  <div class="toast" id="toast" hidden><span id="t-msg"></span><button id="t-undo"></button></div>
+  <p class="note" id="note"></p>
+</div>
+<script>
+var KEY="smartshelf_v2",TX={
+rw:{sell:"Gurisha",stock:"Ibicuruzwa",debts:"Imyenda",report:"Raporo",addP:"Ongeraho igicuruzwa",name:"Izina",unit:"Igipimo (si ngombwa)",buy:"Uko waranguye",price:"Ayo kigura",qty:"Umubare",inStock:"Mu bubiko",save:"Bika",close:"Funga",del:"Siba",undo:"Subiza inyuma",paid:"Yishyuye",credit:"Ku nguzanyo",cust:"Izina ry’umukiriya",profit:"Inyungu",rev:"Yagurishijwe",cost:"Igiciro cy’ibyagurishijwe",bought:"Ibyaguzwe",creditS:"Yatanzwe ku nguzanyo",coll:"Imyenda yishyuwe",items:"Ibyagurishijwe",addStock:"Ongeraho ibicuruzwa (umubare)",owed:"Amafaranga bandimo",remind:"Mwibutse",payB:"Yishyuye",oldDebt:"Andika umwenda",amt:"Amafaranga",emptyStock:"Nta gicuruzwa kirimo. Ongeraho icya mbere.",emptyDebts:"Nta muntu ukubereyemo umwenda.",eName:"Andika izina.",eNum:"Andika umubare ukwiye.",eCust:"Andika izina ry’umukiriya.",eLeft:"Mu bubiko hari ",date:"Itariki",noSales:"Nta cyagurishijwe kuri iyi tariki.",note:"Amakuru y’iduka abikwa kuri konti yawe.",total:"Yose",perUnit:"inyungu kuri kimwe",out:"Byashize",phone:"Telefone ya WhatsApp",sales:"Ibyagurishijwe uyu munsi",saveCh:"Bika impinduka",sold:"Byagurishijwe",msg:function(n,a){return "Muraho "+n+", ni ukwibutsa ko mukirimo umwenda wa "+a+" mu iduka ryacu. Murakoze."},copied:"Ubutumwa bwakoporowe",saved:"Byabitswe"},
+en:{sell:"Sell",stock:"Stock",debts:"Debts",report:"Report",addP:"Add product",name:"Name",unit:"Unit (optional)",buy:"Buying price",price:"Selling price",qty:"Quantity",inStock:"In stock",save:"Save",close:"Close",del:"Delete",undo:"Undo",paid:"Paid",credit:"On credit",cust:"Customer name",profit:"Profit",rev:"Sales",cost:"Cost of goods sold",bought:"Stock bought",creditS:"Given on credit",coll:"Debts collected",items:"Items sold",addStock:"Add stock (quantity)",owed:"Total owed to you",remind:"Remind",payB:"Paid",oldDebt:"Add a debt",amt:"Amount",emptyStock:"No products yet. Add your first one.",emptyDebts:"Nobody owes you.",eName:"Enter a name.",eNum:"Enter a valid number.",eCust:"Enter the customer’s name.",eLeft:"Only in stock: ",date:"Date",noSales:"No sales on this date.",note:"Your shop data is saved to your secure account.",total:"Total",perUnit:"profit each",out:"Out of stock",phone:"WhatsApp phone",sales:"Sales today",saveCh:"Save changes",sold:"Sold",msg:function(n,a){return "Hello "+n+", a friendly reminder that your balance at our shop is "+a+". Thank you."},copied:"Message copied",saved:"Saved"}
+};
+var S=load()||{lang:"rw",items:[],sales:[],rest:[],debts:{}},tab="sell",sel=null,adding=false,editId=null,openD=null,rday=today(),last=null,tt=null;
+function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function T(){return TX[S.lang]}
+function $(id){return document.getElementById(id)}
+function fmt(n){return Math.round(n).toLocaleString("en-US")+" RWF"}
+function r2(n){return Math.round(n*100)/100}
+function today(){return new Date().toLocaleDateString("en-CA")}
+function dk(ts){return new Date(ts).toLocaleDateString("en-CA")}
+function num(s){s=String(s).replace(/[\s,]/g,"").toLowerCase();var m=s.match(/^(\d+(?:\.\d+)?)(k?)$/);if(!m)return null;var v=parseFloat(m[1])*(m[2]?1000:1);return v>0?v:null}
+function nn(s){s=String(s).replace(/[\s,]/g,"");if(s==="0")return 0;return num(s)}
+function uid(){return Date.now()+""+Math.floor(Math.random()*1000)}
+function item(id){return S.items.filter(function(x){return x.id===id})[0]}
+function dbal(c){return c.e.reduce(function(s,x){return s+(x.t==="d"?x.a:-x.a)},0)}
+function phoneFix(p){p=(p||"").replace(/\D/g,"");if(p.indexOf("0")===0)p="250"+p.slice(1);return p}
+function findD(n){var k=n.trim().toLowerCase();for(var x in S.debts){if(x.toLowerCase()===k)return x}return null}
+function h(t,p){var e=document.createElement(t);p=p||{};for(var a in p){if(a==="class")e.className=p[a];else if(a.indexOf("on")===0)e[a]=p[a];else e.setAttribute(a,p[a])}for(var i=2;i<arguments.length;i++){if(arguments[i]!==null&&arguments[i]!==undefined)e.append(arguments[i])}return e}
+function box(l,v,c,big){return h("div",{class:"box"+(big?" big":"")},h("small",{},l),h("b",{class:c||""},v))}
+function dsum(day){
+  var s=S.sales.filter(function(x){return dk(x.ts)===day}),r={rev:0,cost:0,cr:0,coll:0,bought:0,s:s,by:{}};
+  s.forEach(function(x){var a=x.q*x.s,c=x.q*x.b;r.rev+=a;r.cost+=c;if(x.cr)r.cr+=a;var y=r.by[x.n]||(r.by[x.n]={q:0,rev:0,pro:0});y.q+=x.q;y.rev+=a;y.pro+=a-c});
+  r.pro=r.rev-r.cost;
+  for(var k in S.debts)S.debts[k].e.forEach(function(e){if(e.t==="p"&&dk(e.ts)===day)r.coll+=e.a});
+  S.rest.forEach(function(x){if(dk(x.ts)===day)r.bought+=x.q*x.b});
+  return r
+}
+function pc(n){return n>=0?"gain":"loss"}
+
+function toast(m){$("t-msg").textContent=m;$("toast").hidden=false;clearTimeout(tt);tt=setTimeout(function(){$("toast").hidden=true;last=null},9000)}
+function delSale(id){
+  var s=S.sales.filter(function(x){return x.id===id})[0];if(!s)return;
+  var it=item(s.it);if(it)it.q=r2(it.q+s.q);
+  for(var k in S.debts)S.debts[k].e=S.debts[k].e.filter(function(e){return e.sid!==id});
+  S.sales=S.sales.filter(function(x){return x.id!==id});persist()
+}
+$("t-undo").onclick=function(){if(last){delSale(last);last=null;$("toast").hidden=true;render()}};
+
+function viewSell(v){
+  var t=T(),d=dsum(today());
+  v.append(h("div",{class:"sum"},box(t.sales,fmt(d.rev)),box(t.profit,fmt(d.pro),pc(d.pro))));
+  if(!S.items.length){v.append(h("div",{class:"rows"},h("div",{class:"empty"},t.emptyStock)),h("button",{class:"btn pri",style:"width:100%",onclick:function(){tab="stock";adding=true;render()}},t.addP));return}
+  if(sel&&item(sel))v.append(saleForm(item(sel)));
+  var g=h("div",{class:"grid"});
+  S.items.forEach(function(it){g.append(h("button",{class:"prod"+(sel===it.id?" sel":""),onclick:function(){sel=it.id;render();window.scrollTo(0,0)}},h("b",{},it.n),h("span",{},fmt(it.s)+(it.u?" / "+it.u:"")),h("span",{class:it.q<=0?"low":""},it.q<=0?t.out:t.inStock+": "+it.q)))});
+  v.append(g)
+}
+function saleForm(it){
+  var t=T(),cr=false;
+  var q=h("input",{type:"text",inputmode:"decimal",value:"1",class:"amt","aria-label":t.qty}),
+      p=h("input",{type:"text",inputmode:"numeric",value:it.s,"aria-label":t.price}),
+      cn=h("input",{type:"text",autocomplete:"off","aria-label":t.cust}),
+      er=h("div",{class:"err",role:"alert"}),ln=h("div",{class:"line"});
+  function upd(){var a=nn(q.value)||0,b=nn(p.value)||0;ln.textContent=t.total+": "+fmt(a*b)+"  ·  "+t.profit+": "+fmt(a*(b-it.b));er.textContent=""}
+  var bp=h("button",{class:"btn sm on",type:"button"},t.paid),bc=h("button",{class:"btn sm",type:"button"},t.credit),cb=h("div",{hidden:""},h("label",{},t.cust),cn);
+  var chips=h("div",{class:"chips"});Object.keys(S.debts).slice(-6).reverse().forEach(function(n){chips.append(h("button",{class:"chip",type:"button",onclick:function(){cn.value=n}},n))});cb.append(chips);
+  bp.onclick=function(){cr=false;bp.className="btn sm on";bc.className="btn sm";cb.hidden=true};
+  bc.onclick=function(){cr=true;bc.className="btn sm on";bp.className="btn sm";cb.hidden=false;cn.focus()};
+  function step(d){var a=nn(q.value)||0;q.value=Math.max(r2(a+d),1);upd()}
+  q.oninput=upd;p.oninput=upd;
+  var f=h("div",{class:"form"},h("h2",{},it.n+(it.u?" ("+it.u+")":"")),
+    h("label",{},t.qty),h("div",{class:"qrow"},h("button",{class:"btn",type:"button",onclick:function(){step(-1)}},"−"),q,h("button",{class:"btn",type:"button",onclick:function(){step(1)}},"+")),
+    h("label",{},t.price),p,h("div",{class:"two",style:"margin-top:10px"},bp,bc),cb,ln,er,
+    h("div",{class:"frow"},h("button",{class:"btn",type:"button",onclick:function(){sel=null;render()}},t.close),h("button",{class:"btn pri",type:"button",onclick:function(){
+      var a=nn(q.value),b=nn(p.value);if(!a||!b){er.textContent=t.eNum;return}
+      if(a>it.q){er.textContent=t.eLeft+it.q;return}
+      var name="";if(cr){name=cn.value.trim().replace(/\s+/g," ");if(!name){er.textContent=t.eCust;return}name=findD(name)||name}
+      var id=uid(),ts=Date.now();S.sales.push({id:id,ts:ts,it:it.id,n:it.n,q:a,b:it.b,s:b,cr:name});it.q=r2(it.q-a);
+      if(cr){if(!S.debts[name])S.debts[name]={p:"",e:[]};S.debts[name].e.push({id:"e"+id,t:"d",a:a*b,ts:ts,sid:id,i:it.n})}
+      persist();last=id;sel=null;render();toast(t.saved+": "+it.n+" × "+a+" = "+fmt(a*b))
+    }},t.save)));
+  upd();return f
+}
+
+function viewStock(v){
+  var t=T();
+  v.append(h("button",{class:"btn pri",style:"width:100%;margin-bottom:15px",onclick:function(){adding=!adding;render()}},t.addP));
+  if(adding)v.append(addForm());
+  if(!S.items.length){v.append(h("div",{class:"rows"},h("div",{class:"empty"},t.emptyStock)));return}
+  var rows=h("div",{class:"rows"});
+  S.items.forEach(function(it){
+    var u=it.s-it.b,row=h("div",{class:"row"},h("div",{class:"rtop"},
+      h("button",{class:"rname",type:"button",onclick:function(){editId=editId===it.id?null:it.id;render()}},h("b",{},it.n+(it.u?" ("+it.u+")":"")),h("span",{},fmt(it.b)+" → "+fmt(it.s)+"  ·  "+t.perUnit+" "+fmt(u))),
+      h("div",{class:"rval"},String(it.q),h("small",{class:it.q<=0?"loss":""},it.q<=0?t.out:t.inStock))));
+    if(editId===it.id)row.append(editPanel(it));rows.append(row)
+  });
+  v.append(rows)
+}
+function addForm(){
+  var t=T(),f=h("div",{class:"form"},h("h2",{},t.addP)),I={};
+  [["n",t.name,"text"],["u",t.unit,"text"],["b",t.buy,"numeric"],["s",t.price,"numeric"],["q",t.inStock+" ("+t.qty+")","decimal"]].forEach(function(x){I[x[0]]=h("input",{type:"text",inputmode:x[2]==="text"?"text":x[2],"aria-label":x[1]});f.append(h("label",{},x[1]),I[x[0]])});
+  var er=h("div",{class:"err",role:"alert"});
+  f.append(er,h("div",{class:"frow"},h("button",{class:"btn",type:"button",onclick:function(){adding=false;render()}},t.close),h("button",{class:"btn pri",type:"button",onclick:function(){
+    var n=I.n.value.trim();if(!n){er.textContent=t.eName;return}
+    var b=nn(I.b.value),s=nn(I.s.value),q=I.q.value.trim()===""?0:nn(I.q.value);
+    if(b===null||s===null||q===null){er.textContent=t.eNum;return}
+    var id=uid();S.items.push({id:id,n:n,u:I.u.value.trim(),b:b,s:s,q:q});if(q>0)S.rest.push({id:id,ts:Date.now(),n:n,q:q,b:b});
+    persist();adding=false;render()
+  }},t.save)));
+  return f
+}
+function editPanel(it){
+  var t=T(),b=h("input",{type:"text",inputmode:"numeric",value:it.b,"aria-label":t.buy}),s=h("input",{type:"text",inputmode:"numeric",value:it.s,"aria-label":t.price}),a=h("input",{type:"text",inputmode:"decimal",placeholder:"0","aria-label":t.addStock}),er=h("div",{class:"err",role:"alert"});
+  return h("div",{class:"panel"},h("label",{},t.buy),b,h("label",{},t.price),s,h("label",{},t.addStock),a,er,
+    h("div",{class:"frow"},h("button",{class:"btn sm",type:"button",onclick:function(){if(confirm(t.del+"?")){S.items=S.items.filter(function(x){return x.id!==it.id});editId=null;persist();render()}}},t.del),
+    h("button",{class:"btn pri sm",type:"button",onclick:function(){
+      var nb=nn(b.value),ns=nn(s.value),add=a.value.trim()===""?0:nn(a.value);
+      if(nb===null||ns===null||add===null){er.textContent=t.eNum;return}
+      if(add>0){it.b=it.q>0?r2((it.q*it.b+add*nb)/(it.q+add)):nb;it.q=r2(it.q+add);S.rest.push({id:uid(),ts:Date.now(),n:it.n,q:add,b:nb})}else it.b=nb;
+      it.s=ns;persist();editId=null;render()
+    }},t.saveCh)))
+}
+
+function viewDebts(v){
+  var t=T(),list=Object.keys(S.debts).filter(function(k){return dbal(S.debts[k])>0}).sort(function(a,b){return dbal(S.debts[b])-dbal(S.debts[a])}),tot=0;
+  list.forEach(function(k){tot+=dbal(S.debts[k])});
+  v.append(box(t.owed,fmt(tot),"",true));
+  var dn=h("input",{type:"text","aria-label":t.name}),da=h("input",{type:"text",inputmode:"numeric","aria-label":t.amt}),er=h("div",{class:"err",role:"alert"});
+  v.append(h("div",{class:"form",style:"margin-top:12px;border-color:var(--line)"},h("h2",{},t.oldDebt),h("div",{class:"two"},dn,da),er,h("button",{class:"btn sm",type:"button",style:"width:100%",onclick:function(){
+    var n=dn.value.trim().replace(/\s+/g," "),a=num(da.value);if(!n){er.textContent=t.eName;return}if(!a){er.textContent=t.eNum;return}
+    n=findD(n)||n;if(!S.debts[n])S.debts[n]={p:"",e:[]};S.debts[n].e.push({id:uid(),t:"d",a:a,ts:Date.now()});persist();render()}},t.save)));
+  var rows=h("div",{class:"rows"});if(!list.length)rows.append(h("div",{class:"empty"},t.emptyDebts));
+  list.forEach(function(k){
+    var c=S.debts[k],row=h("div",{class:"row"},h("div",{class:"rtop"},
+      h("button",{class:"rname",type:"button",onclick:function(){openD=openD===k?null:k;render()}},h("b",{},k)),
+      h("div",{class:"rval"},fmt(dbal(c))),h("button",{class:"rem",type:"button",onclick:function(){remind(k)}},t.remind)));
+    if(openD===k){
+      var pa=h("input",{type:"text",inputmode:"numeric","aria-label":t.amt,placeholder:t.amt}),ph=h("input",{type:"tel","aria-label":t.phone,placeholder:t.phone,value:c.p?"0"+c.p.slice(3):""}),pe=h("div",{class:"err",role:"alert"}),pn=h("div",{class:"panel"});
+      ph.onchange=function(){c.p=phoneFix(ph.value);persist()};
+      pn.append(h("div",{class:"two"},pa,h("button",{class:"btn pri sm",type:"button",onclick:function(){var a=num(pa.value);if(!a){pe.textContent=t.eNum;return}c.e.push({id:uid(),t:"p",a:Math.min(a,dbal(c)),ts:Date.now()});persist();render()}},t.payB)),pe,h("label",{style:"display:block;color:var(--mut);margin:8px 0 4px"},t.phone),ph);
+      c.e.slice().reverse().forEach(function(x){pn.append(h("div",{class:"hl"},h("span",{},h("span",{class:"m"},new Date(x.ts).toLocaleDateString("en-GB",{day:"numeric",month:"short"})+"  "),(x.t==="d"?"+":"−")+fmt(x.a)+(x.i?" · "+x.i:"")),h("button",{class:"link",type:"button",onclick:function(){c.e=c.e.filter(function(y){return y.id!==x.id});persist();render()}},t.del)))});
+      row.append(pn)
+    }
+    rows.append(row)
+  });
+  v.append(rows)
+}
+function remind(n){
+  var c=S.debts[n],t=T(),m=t.msg(n,fmt(dbal(c))),w=null;
+  try{w=window.open("https://wa.me/"+(c.p||"")+"?text="+encodeURIComponent(m),"_blank")}catch(e){}
+  if(!w){try{navigator.clipboard.writeText(m);toast(t.copied)}catch(e){toast(m)}}
+}
+
+function viewReport(v){
+  var t=T(),di=h("input",{type:"date",value:rday,"aria-label":t.date});
+  di.onchange=function(){rday=di.value||today();render()};
+  var d=dsum(rday);
+  v.append(h("label",{style:"display:block;color:var(--mut);font-size:15px;margin-bottom:4px"},t.date),di,h("div",{style:"height:12px"}),
+    box(t.profit,fmt(d.pro),pc(d.pro),true),h("div",{style:"height:10px"}),
+    h("div",{class:"sum"},box(t.rev,fmt(d.rev)),box(t.cost,fmt(d.cost)),box(t.bought,fmt(d.bought)),box(t.creditS,fmt(d.cr)),box(t.coll,fmt(d.coll))));
+  if(!d.s.length){v.append(h("div",{class:"rows",style:"margin-top:12px"},h("div",{class:"empty"},t.noSales)));return}
+  v.append(h("h3",{},t.items));
+  var rows=h("div",{class:"rows"});
+  Object.keys(d.by).sort(function(a,b){return d.by[b].pro-d.by[a].pro}).forEach(function(n){var y=d.by[n];rows.append(h("div",{class:"row"},h("div",{class:"rtop"},h("div",{class:"rname"},h("b",{},n),h("span",{},t.sold+": "+y.q+"  ·  "+fmt(y.rev))),h("div",{class:"rval "+pc(y.pro)},fmt(y.pro),h("small",{},t.profit)))))});
+  v.append(rows,h("h3",{},t.sales));
+  var rs=h("div",{class:"rows"});
+  d.s.slice().reverse().forEach(function(x){rs.append(h("div",{class:"row"},h("div",{class:"rtop"},h("div",{class:"rname"},h("b",{style:"font-size:16px"},x.n+" × "+x.q),h("span",{},new Date(x.ts).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})+"  ·  "+fmt(x.q*x.s)+(x.cr?"  ·  "+x.cr:""))),h("button",{class:"link",type:"button",onclick:function(){delSale(x.id);render()}},t.del))))});
+  v.append(rs)
+}
+
+function render(){
+  var t=T(),v=$("view");v.innerHTML="";
+  $("l-rw").className=S.lang==="rw"?"on":"";$("l-en").className=S.lang==="en"?"on":"";$("note").textContent=t.note;$("t-undo").textContent=t.undo;document.documentElement.lang=S.lang==="rw"?"rw":"en";
+  var tb=$("tabs");tb.innerHTML="";
+  ["sell","stock","debts","report"].forEach(function(k){tb.append(h("button",{class:tab===k?"on":"",type:"button",onclick:function(){tab=k;render()}},t[k]))});
+  ({sell:viewSell,stock:viewStock,debts:viewDebts,report:viewReport})[tab](v)
+}
+$("l-rw").onclick=function(){S.lang="rw";persist();render()};
+$("l-en").onclick=function(){S.lang="en";persist();render()};
+render();
+</script>
+</body>
+</html>
