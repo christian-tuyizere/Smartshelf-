@@ -6,6 +6,17 @@
 <title>SmartShelf</title>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
 <style>
+.auth-card{max-width:440px;margin:28px auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px}
+.auth-card h1{font-size:24px;margin:0 0 6px}.auth-card p{color:var(--mut);margin:0 0 16px}
+.auth-card label{display:block;font-size:15px;color:var(--mut);margin:12px 0 7px}
+.auth-card input{margin-bottom:4px}.auth-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.auth-error{color:var(--dng);font-size:14px;min-height:22px;margin-top:10px}
+.auth-help{font-size:13px;color:var(--mut);margin-top:14px}
+.auth-link{border:0;background:none;color:var(--acc);font:inherit;text-decoration:underline;padding:8px;cursor:pointer}
+#logout{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:8px 10px;min-height:40px;font:inherit;font-size:14px}
+body.signed-out .app>.top,body.signed-out .app>.tabs,body.signed-out #view,body.signed-out #toast,body.signed-out #note{display:none!important}
+body:not(.signed-out) #auth{display:none!important}
+
 :root{--bg:#f4f6f8;--card:#fff;--ink:#16202b;--mut:#5d6b79;--line:#dbe1e7;--acc:#17406b;--on:#fff;--wa:#1c7a4a;--dng:#a8321f;--rule:#e9eef3;--gain:#14693f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10161d;--card:#18212b;--ink:#eaf0f5;--mut:#9aa8b6;--line:#2b3744;--acc:#7fb4ea;--on:#0b1722;--wa:#58c98a;--dng:#f08a76;--rule:#212c37;--gain:#6fd49b;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#10161d;--card:#18212b;--ink:#eaf0f5;--mut:#9aa8b6;--line:#2b3744;--acc:#7fb4ea;--on:#0b1722;--wa:#58c98a;--dng:#f08a76;--rule:#212c37;--gain:#6fd49b;color-scheme:dark}
@@ -77,20 +88,33 @@ h3{font-size:15px;color:var(--mut);font-weight:400;margin:14px 4px 6px}
 </head>
 <body>
 <div class="app">
-  <div class="top"><div class="logo">SmartShelf</div><div class="lang" role="group" aria-label="Language"><button id="l-rw">RW</button><button id="l-en">EN</button></div></div>
+  <div id="auth" aria-live="polite"></div>
+  <div class="top"><div class="logo">SmartShelf</div><div style="display:flex;align-items:center;gap:8px"><div class="lang" role="group" aria-label="Language"><button id="l-rw">RW</button><button id="l-en">EN</button></div><button id="logout" type="button">Log out</button></div></div>
   <div class="tabs" id="tabs"></div>
   <div id="view"></div>
   <div class="toast" id="toast" hidden><span id="t-msg"></span><button id="t-undo"></button></div>
   <p class="note" id="note"></p>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./supabase-config.js"></script>
 <script>
+let currentUser=null, supabaseClient=null, cloudSaveTimer=null, authMode="login";
 var KEY="smartshelf_v2",TX={
 rw:{sell:"Gurisha",stock:"Ibicuruzwa",debts:"Imyenda",report:"Raporo",addP:"Ongeraho igicuruzwa",name:"Izina",unit:"Igipimo (si ngombwa)",buy:"Uko waranguye",price:"Ayo kigura",qty:"Umubare",inStock:"Mu bubiko",save:"Bika",close:"Funga",del:"Siba",undo:"Subiza inyuma",paid:"Yishyuye",credit:"Ku nguzanyo",cust:"Izina ry’umukiriya",profit:"Inyungu",rev:"Yagurishijwe",cost:"Igiciro cy’ibyagurishijwe",bought:"Ibyaguzwe",creditS:"Yatanzwe ku nguzanyo",coll:"Imyenda yishyuwe",items:"Ibyagurishijwe",addStock:"Ongeraho ibicuruzwa (umubare)",owed:"Amafaranga bandimo",remind:"Mwibutse",payB:"Yishyuye",oldDebt:"Andika umwenda",amt:"Amafaranga",emptyStock:"Nta gicuruzwa kirimo. Ongeraho icya mbere.",emptyDebts:"Nta muntu ukubereyemo umwenda.",eName:"Andika izina.",eNum:"Andika umubare ukwiye.",eCust:"Andika izina ry’umukiriya.",eLeft:"Mu bubiko hari ",date:"Itariki",noSales:"Nta cyagurishijwe kuri iyi tariki.",note:"Amakuru y’iduka abikwa kuri konti yawe.",total:"Yose",perUnit:"inyungu kuri kimwe",out:"Byashize",phone:"Telefone ya WhatsApp",sales:"Ibyagurishijwe uyu munsi",saveCh:"Bika impinduka",sold:"Byagurishijwe",msg:function(n,a){return "Muraho "+n+", ni ukwibutsa ko mukirimo umwenda wa "+a+" mu iduka ryacu. Murakoze."},copied:"Ubutumwa bwakoporowe",saved:"Byabitswe"},
 en:{sell:"Sell",stock:"Stock",debts:"Debts",report:"Report",addP:"Add product",name:"Name",unit:"Unit (optional)",buy:"Buying price",price:"Selling price",qty:"Quantity",inStock:"In stock",save:"Save",close:"Close",del:"Delete",undo:"Undo",paid:"Paid",credit:"On credit",cust:"Customer name",profit:"Profit",rev:"Sales",cost:"Cost of goods sold",bought:"Stock bought",creditS:"Given on credit",coll:"Debts collected",items:"Items sold",addStock:"Add stock (quantity)",owed:"Total owed to you",remind:"Remind",payB:"Paid",oldDebt:"Add a debt",amt:"Amount",emptyStock:"No products yet. Add your first one.",emptyDebts:"Nobody owes you.",eName:"Enter a name.",eNum:"Enter a valid number.",eCust:"Enter the customer’s name.",eLeft:"Only in stock: ",date:"Date",noSales:"No sales on this date.",note:"Your shop data is saved to your secure account.",total:"Total",perUnit:"profit each",out:"Out of stock",phone:"WhatsApp phone",sales:"Sales today",saveCh:"Save changes",sold:"Sold",msg:function(n,a){return "Hello "+n+", a friendly reminder that your balance at our shop is "+a+". Thank you."},copied:"Message copied",saved:"Saved"}
 };
 var S=load()||{lang:"rw",items:[],sales:[],rest:[],debts:{}},tab="sell",sel=null,adding=false,editId=null,openD=null,rday=today(),last=null,tt=null;
 function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}}
-function persist(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function persist(){
+  try{if(!currentUser)localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  if(currentUser&&supabaseClient){
+    clearTimeout(cloudSaveTimer);
+    cloudSaveTimer=setTimeout(async function(){
+      var result=await supabaseClient.from("shop_data").upsert({user_id:currentUser.id,data:S,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+      if(result.error)toast("Cloud save failed. Check your connection and try again.");
+    },500);
+  }
+}
 function T(){return TX[S.lang]}
 function $(id){return document.getElementById(id)}
 function fmt(n){return Math.round(n).toLocaleString("en-US")+" RWF"}
@@ -257,6 +281,70 @@ function render(){
 $("l-rw").onclick=function(){S.lang="rw";persist();render()};
 $("l-en").onclick=function(){S.lang="en";persist();render()};
 render();
+function authMarkup(message){
+  var auth=$("auth");
+  auth.innerHTML='<div class="auth-card"><h1>Welcome to SmartShelf</h1><p>Sign in to securely access your shop records from your account.</p><form id="auth-form"><label for="auth-email">Email address</label><input id="auth-email" type="email" autocomplete="email" required placeholder="you@example.com"><label for="auth-password">Password</label><input id="auth-password" type="password" autocomplete="current-password" minlength="8" required placeholder="At least 8 characters"><div class="auth-actions"><button class="btn pri" id="auth-submit" type="submit">Sign in</button><button class="btn" id="auth-switch" type="button">Create account</button></div></form><button class="auth-link" id="forgot-password" type="button">Forgot password?</button><div class="auth-error" id="auth-error" role="alert"></div><div class="auth-help">Your shop data is stored in your account. Each account can only access its own records.</div></div>';
+  $("auth-error").textContent=message||"";
+  $("auth-form").onsubmit=submitAuth;
+  $("auth-switch").onclick=function(){authMode=authMode==="login"?"signup":"login";updateAuthMode()};
+  $("forgot-password").onclick=sendPasswordReset;
+  updateAuthMode();
+}
+function updateAuthMode(){
+  if(!$("auth-submit"))return;
+  $("auth-submit").textContent=authMode==="login"?"Sign in":"Create account";
+  $("auth-switch").textContent=authMode==="login"?"Create account":"Back to sign in";
+  $("auth-password").autocomplete=authMode==="login"?"current-password":"new-password";
+}
+async function submitAuth(ev){
+  ev.preventDefault();
+  var email=$("auth-email").value.trim(),password=$("auth-password").value;
+  $("auth-submit").disabled=true;$("auth-error").textContent="";
+  try{
+    var result=authMode==="login"?await supabaseClient.auth.signInWithPassword({email:email,password:password}):await supabaseClient.auth.signUp({email:email,password:password});
+    if(result.error)throw result.error;
+    if(authMode==="signup"&&!result.data.session)$("auth-error").textContent="Account created. Check your email to confirm your address, then sign in.";
+    else if(result.data.session)await activateAccount(result.data.session.user);
+  }catch(err){$("auth-error").textContent=err.message||"Authentication failed."}
+  finally{if($("auth-submit"))$("auth-submit").disabled=false}
+}
+async function sendPasswordReset(){
+  var email=$("auth-email").value.trim();
+  if(!email){$("auth-error").textContent="Enter your email address first.";return}
+  try{var r=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:window.location.href});if(r.error)throw r.error;$("auth-error").textContent="If that account exists, a password reset email has been sent."}
+  catch(err){$("auth-error").textContent=err.message||"Could not send reset email."}
+}
+async function activateAccount(user){
+  if(currentUser&&currentUser.id===user.id)return;
+  currentUser=user;
+  try{
+    var result=await supabaseClient.from("shop_data").select("data").eq("user_id",user.id).maybeSingle();
+    if(result.error)throw result.error;
+    if(result.data&&result.data.data)S=result.data.data;
+    else{var save=await supabaseClient.from("shop_data").upsert({user_id:user.id,data:S,updated_at:new Date().toISOString()},{onConflict:"user_id"});if(save.error)throw save.error}
+    localStorage.removeItem(KEY);document.body.classList.remove("signed-out");render();
+  }catch(err){currentUser=null;document.body.classList.add("signed-out");authMarkup("Could not load your shop data: "+(err.message||"Check the database setup."))}
+}
+async function initAuth(){
+  var cfg=window.SMARTSHELF_SUPABASE||{};
+  if(!cfg.url||!cfg.anonKey||!window.supabase||!window.supabase.createClient||cfg.url.includes("YOUR-PROJECT")||cfg.anonKey.includes("YOUR_SUPABASE")){document.body.classList.add("signed-out");authMarkup("Setup required: add your Supabase project URL and anon key to supabase-config.js.");return}
+  supabaseClient=window.supabase.createClient(cfg.url,cfg.anonKey);
+  $("logout").onclick=async function(){
+    if(!confirm("Log out of SmartShelf?"))return;
+    clearTimeout(cloudSaveTimer);var r=await supabaseClient.auth.signOut();
+    if(r.error){toast("Could not log out.");return}
+    currentUser=null;S={lang:S.lang,items:[],sales:[],rest:[],debts:{}};document.body.classList.add("signed-out");authMode="login";authMarkup("You have been signed out.");
+  };
+  supabaseClient.auth.onAuthStateChange(function(event,session){
+    if(session&&session.user)setTimeout(function(){activateAccount(session.user)},0);
+    else if(event==="SIGNED_OUT"){currentUser=null;document.body.classList.add("signed-out");authMode="login";authMarkup("You have been signed out.")}
+  });
+  var session=await supabaseClient.auth.getSession();
+  if(session.error){document.body.classList.add("signed-out");authMarkup(session.error.message);return}
+  if(session.data.session)await activateAccount(session.data.session.user);
+  else{document.body.classList.add("signed-out");authMarkup("")}
+}
+initAuth();
 </script>
 </body>
 </html>
